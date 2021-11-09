@@ -49,6 +49,10 @@ function LeerParametros: boolean;
 function NombDifArc(nomBase: String): String;
 
 implementation
+
+uses
+  MiConfigXML;
+
 const
   WA_DIR_NOEXIST = 'Directory: %s no found. It will be created';
   ER_CANN_READDI = 'Cannot read or create directories.';
@@ -174,9 +178,29 @@ begin
    //todos los nombres estaban ocupados. Sale con el mismo nombre
 End;
 
+const
+  LinuxDataDir = '/usr/share/PicPas/';
+  LinuxLanguageDir = LinuxDataDir + 'language';
+
+function IsInstalledInLinux: Boolean;
+begin
+  Result := DirectoryExists(LinuxLanguageDir);
+end;
+
+function GetDataDir: string;
+begin
+  Result := ExtractFilePath(Application.ExeName);
+  {$IFDEF Linux}
+  // If installed in Linux system then use installation shared game directory for data files
+  if IsInstalledInLinux then Result := LinuxDataDir;
+  {$ENDIF}
+end;
+
+
 initialization
   //inicia directorios de la aplicación
-  patApp      :=  ExtractFilePath(Application.ExeName);  //incluye el '\' final
+
+  patApp      := GetDataDir;  //incluye el '\' final
   patSamples  := patApp + 'samples';
   patUnits    := patApp + 'units';
   patTemp     := patApp + 'temp';
@@ -186,6 +210,29 @@ initialization
   patDevices16 := patApp + 'devices16';
   patDevices17 := patApp + 'devices17';
   patDevices18 := patApp + 'devices18';
+  {$IFDEF Linux}
+  if IsInstalledInLinux then begin
+    cfgFile.Free;
+    cfgFile := TMiConfigXML.Create(GetAppConfigDir(False) +
+      ChangeFileExt(ExtractFileName(Application.ExeName), '.xml'));
+    ForceDirectories(ExtractFileDir(cfgFile.ReadFileName));
+    // Copy initial default config file if it doesn't exist
+    CopyFile(patApp + ChangeFileExt(ExtractFileName(Application.ExeName), '.xml'),
+      cfgFile.ReadFileName, []);
+
+    // Relocate temp into user area
+    patTemp := GetAppConfigDir(False) + 'temp';
+    ForceDirectories(patTemp);
+
+    // Make initial copy of syntax files to be writeable by config dialog
+    patSyntax := GetAppConfigDir(False) + 'syntax';
+    CopyDirTree(LinuxDataDir + 'syntax', patSyntax, [cffCreateDestDirectory]);
+
+    // Make initial copy of samples files to be writeable and allow to create .hex file
+    patSamples := GetAppConfigDir(False) + 'samples';
+    CopyDirTree(LinuxDataDir + 'samples', patSamples, [cffCreateDestDirectory]);
+  end;
+  {$ENDIF}
   archivoEnt  := '';    //archivo de entrada
   //verifica existencia de carpetas de trabajo
   try

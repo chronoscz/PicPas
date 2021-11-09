@@ -1,0 +1,6 @@
+PicPas-linux
+PicPas-linux.dbg
+Source/PicPas.lps
+Source/PicPas.res
+Source/lib/
+samples/*.hex
