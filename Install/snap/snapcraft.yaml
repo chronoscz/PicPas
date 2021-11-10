@@ -32,7 +32,7 @@ parts:
     - lcl-utils
     override-build: |
       snapcraftctl build
-      lazbuild --build-mode=Debug Source/PicPas.lpi
+      lazbuild --build-mode=Release Source/PicPas.lpi
       install -d -m 755 $SNAPCRAFT_PART_INSTALL/usr/bin
       install -s -m 755 PicPas-linux $SNAPCRAFT_PART_INSTALL/usr/bin
       install -d -m 755 $SNAPCRAFT_PART_INSTALL/usr/share/PicPas/language
@@ -55,7 +55,7 @@ parts:
       cp -r devices17 $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
       cp -r devices18 $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
       cp -r themes $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
-      install -m 644 PicPas-linux.xml $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
+      install -m 644 Install/snap/local/PicPas-linux.xml $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
     stage:
     - usr
     - usr/bin
@@ -72,6 +72,7 @@ apps:
     plugs:
     - desktop
     - x11
+    - home
 
 layout:
   /usr/share/PicPas:

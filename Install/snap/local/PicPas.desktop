@@ -8,3 +8,4 @@ Terminal=false
 Type=Application
 Categories=GNOME;Application;Development;
 StartupNotify=true
+MimeType=text/x-pascal
