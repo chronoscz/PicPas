@@ -179,21 +179,41 @@ begin
 End;
 
 const
-  LinuxDataDir = '/usr/share/PicPas/';
-  LinuxLanguageDir = LinuxDataDir + 'language';
+  UnixDataDir = '/usr/share/PicPas/';
+  UnixLanguageDir = UnixDataDir + 'language';
 
-function IsInstalledInLinux: Boolean;
+function IsInstalledInUnix: Boolean;
 begin
-  Result := DirectoryExists(LinuxLanguageDir);
+  Result := DirectoryExists(UnixLanguageDir);
 end;
 
 function GetDataDir: string;
 begin
   Result := ExtractFilePath(Application.ExeName);
-  {$IFDEF Linux}
-  // If installed in Linux system then use installation shared game directory for data files
-  if IsInstalledInLinux then Result := LinuxDataDir;
+  {$IFDEF UNIX}
+  // If installed in Unix system then use installation shared game directory for data files
+  if IsInstalledInUnix then Result := UnixDataDir;
   {$ENDIF}
+end;
+
+procedure MakeFileWriteable(FileName: string);
+begin
+  if FileIsReadOnly(FileName) then
+    FileSetAttr(FileName, FileGetAttr(FileName) xor faReadOnly);
+end;
+
+procedure MakeFilesWriteable(Dir: string);
+var
+  I: Integer;
+  Files: TStringList;
+begin
+  Files := FindAllFiles(Dir, '*', True);
+  try
+    for I := 0 to Files.Count - 1 do
+      if FileExists(Files[I]) then MakeFileWriteable(Files[I]);
+  finally
+    Files.Free;
+  end;
 end;
 
 
@@ -210,8 +230,8 @@ initialization
   patDevices16 := patApp + 'devices16';
   patDevices17 := patApp + 'devices17';
   patDevices18 := patApp + 'devices18';
-  {$IFDEF Linux}
-  if IsInstalledInLinux then begin
+  {$IFDEF UNIX}
+  if IsInstalledInUnix then begin
     cfgFile.Free;
     cfgFile := TMiConfigXML.Create(GetAppConfigDir(False) +
       ChangeFileExt(ExtractFileName(Application.ExeName), '.xml'));
@@ -219,6 +239,7 @@ initialization
     // Copy initial default config file if it doesn't exist
     CopyFile(patApp + ChangeFileExt(ExtractFileName(Application.ExeName), '.xml'),
       cfgFile.ReadFileName, []);
+    MakeFileWriteable(cfgFile.ReadFileName);
 
     // Relocate temp into user area
     patTemp := GetAppConfigDir(False) + 'temp';
@@ -226,11 +247,13 @@ initialization
 
     // Make initial copy of syntax files to be writeable by config dialog
     patSyntax := GetAppConfigDir(False) + 'syntax';
-    CopyDirTree(LinuxDataDir + 'syntax', patSyntax, [cffCreateDestDirectory]);
+    CopyDirTree(UnixDataDir + 'syntax', patSyntax, [cffCreateDestDirectory]);
+    MakeFilesWriteable(patSyntax);
 
     // Make initial copy of samples files to be writeable and allow to create .hex file
     patSamples := GetAppConfigDir(False) + 'samples';
-    CopyDirTree(LinuxDataDir + 'samples', patSamples, [cffCreateDestDirectory]);
+    CopyDirTree(UnixDataDir + 'samples', patSamples, [cffCreateDestDirectory]);
+    MakeFilesWriteable(patSamples);
   end;
   {$ENDIF}
   archivoEnt  := '';    //archivo de entrada

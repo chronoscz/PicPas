@@ -557,7 +557,7 @@ begin
       StatusBar1.Panels[1].Text := Format('%d,%d', [ed.SynEdit.CaretX, ed.SynEdit.CaretY]);
     end;
   end;
-  if Config.AutSynChk and (ticSynCheck = 5) then begin
+  if Assigned(Config) and Config.AutSynChk and (ticSynCheck = 5) then begin
     //Se cumplió el tiempo para iniciar la verificación automática de sintaxis
 //    debugln('--Verif. Syntax.' + TimeToStr(now));
     if fraEditView1.Count>0 then begin

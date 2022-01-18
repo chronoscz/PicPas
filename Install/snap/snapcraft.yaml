@@ -4,16 +4,12 @@ version: '0.8.7'
 summary: Pascal cross-compiler for Microchip 8-bit PIC microcontrollers.
 description: |
   PicPas is a Pascal compiler and IDE, written in Lazarus, which generates executable code for Baseline and Mid-range PIC microcontrollers.
-
-  No additional libraries or software required to compile. PicPas generates the *.hex file directly.
-
-  PicPas works with a simplified version of the Pascal language, that has been adapted to work with limited resources small devices.
-
-  Currently, it only supports basic types.
-
-  It includes a complete IDE/debugger/simulator to facilitate the development.
-
-  The PicPas compiler includes advanced optimization options so the code obtained is generally more compact than the obtained with other compilers.
+  
+  * No additional libraries or software required to compile. PicPas generates the *.hex file directly.
+  * PicPas works with a simplified version of the Pascal language, that has been adapted to work with limited resources small devices.
+  * Currently, it only supports basic types.
+  * It includes a complete IDE/debugger/simulator to facilitate the development.
+  * The PicPas compiler includes advanced optimization options so the code obtained is generally more compact than the obtained with other compilers.
 confinement: strict
 base: core20
 grade: stable
@@ -44,10 +40,7 @@ parts:
       install -m 755 Install/snap/local/PicPas.desktop $SNAPCRAFT_PART_INSTALL/usr/share/applications
       install -d -m 755 $SNAPCRAFT_PART_INSTALL/usr/share/pixmaps
       install -m 644 Install/snap/local/PicPas.png $SNAPCRAFT_PART_INSTALL/usr/share/pixmaps
-      install -d -m 755 $SNAPCRAFT_PART_INSTALL/usr/share/PicPas/syntax
-      install -m 644 syntax/PicPas_AsmPic.xml $SNAPCRAFT_PART_INSTALL/usr/share/PicPas/syntax
-      install -m 644 syntax/PicPas_C.xml $SNAPCRAFT_PART_INSTALL/usr/share/PicPas/syntax
-      install -m 644 syntax/PicPas_PIC16.xml $SNAPCRAFT_PART_INSTALL/usr/share/PicPas/syntax
+      cp -r syntax $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
       cp -r units $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
       cp -r samples $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
       cp -r devices10 $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
@@ -56,6 +49,8 @@ parts:
       cp -r devices18 $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
       cp -r themes $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
       install -m 644 Install/snap/local/PicPas-linux.xml $SNAPCRAFT_PART_INSTALL/usr/share/PicPas
+    after:
+    - desktop-gtk2
     stage:
     - usr
     - usr/bin
@@ -64,10 +59,62 @@ parts:
     - usr/share/pixmaps
     stage-packages:
     - libgtk2.0-0
+    
+  desktop-gtk2:
+    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+    source-subdir: gtk
+    plugin: make
+    make-parameters: ["FLAVOR=gtk2"]
+    build-packages:
+    - build-essential
+    - libgtk2.0-dev
+    stage-packages:
+    - libxkbcommon0  # XKB_CONFIG_ROOT
+    - ttf-ubuntu-font-family
+    - dmz-cursor-theme
+    - light-themes
+    - adwaita-icon-theme
+    - gnome-themes-standard
+    - shared-mime-info
+    - libgtk2.0-0
+    - libgdk-pixbuf2.0-0
+    - libglib2.0-bin
+    - libgtk2.0-bin
+    - unity-gtk2-module
+    - locales-all
+    - libappindicator1
+    - xdg-user-dirs
+    - ibus-gtk
+    - libibus-1.0-5
+      
+# Additional plugs to pick up the GTK theme and icons from the system
+plugs: 
+  icon-themes:
+    interface: content
+    target: $SNAP/data-dir/icons
+    default-provider: gtk-common-themes
+  sound-themes:
+    interface: content
+    target: $SNAP/data-dir/sounds
+    default-provider: gtk-common-themes
+  gtk-2-engines:
+    interface: content
+    target: $SNAP/lib/gtk-2.0
+    default-provider: gtk2-common-themes:gtk-2-engines
+  gtk-2-themes:
+    interface: content
+    target: $SNAP/usr/share/themes
+    default-provider: gtk2-common-themes:gtk-2-themes
+
+environment:
+  XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
+  GTK_PATH: $SNAP/lib/gtk-2.0
 
 apps:
   picpas:
     command: usr/bin/PicPas-linux
+    command-chain:
+    - bin/desktop-launch
     desktop: usr/share/applications/PicPas.desktop
     plugs:
     - desktop
